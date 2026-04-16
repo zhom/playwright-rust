@@ -36,7 +36,9 @@ impl BrowserType {
         args: LaunchArgs<'_, '_, '_>,
     ) -> Result<Weak<Browser>, Arc<Error>> {
         let res = send_message!(self, "launch", args);
-        let guid = only_guid(&res)?;
+        // Newer Chromium may return {"browser": {"guid": ...}} with extra keys.
+        // Fall back to the old single-key format.
+        let guid = extract_guid(&res, "browser")?;
         let b = get_object!(self.context()?.lock().unwrap(), guid, Browser)?;
         Ok(b)
     }
@@ -46,7 +48,9 @@ impl BrowserType {
         args: LaunchPersistentContextArgs<'_, '_, '_, '_, '_, '_, '_, '_, '_, '_, '_>,
     ) -> Result<Weak<BrowserContext>, Arc<Error>> {
         let res = send_message!(self, "launchPersistentContext", args);
-        let guid = only_guid(&res)?;
+        // Newer Chromium (146+) returns {"browser": {"guid": ...}, "context": {"guid": ...}}
+        // instead of the old single-key format. Extract the context guid.
+        let guid = extract_guid(&res, "context")?;
         let b = get_object!(self.context()?.lock().unwrap(), guid, BrowserContext)?;
         Ok(b)
     }

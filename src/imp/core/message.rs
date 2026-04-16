@@ -164,6 +164,27 @@ pub(crate) fn only_guid(v: &Value) -> Result<&S<Guid>, Error> {
     as_only_guid(v).ok_or_else(|| Error::GuidNotFound(v.clone()))
 }
 
+/// Extract a guid from a response that may use the new multi-key format
+/// (e.g. `{"browser": {"guid": ...}, "context": {"guid": ...}}`) or the old
+/// single-key format (`{"context": {"guid": ...}}`). The `key` parameter
+/// specifies which nested object to read ("browser" or "context").
+pub(crate) fn extract_guid<'a>(v: &'a Value, key: &str) -> Result<&'a S<Guid>, Error> {
+    // Try the named key first (new format)
+    if let Some(obj) = v.as_object().and_then(|m| m.get(key)) {
+        if let Some(m) = obj.as_object() {
+            if let Some(guid_val) = m.get("guid") {
+                if let Some(s) = guid_val.as_str() {
+                    if let Ok(validated) = S::<Guid>::validate(s) {
+                        return Ok(validated);
+                    }
+                }
+            }
+        }
+    }
+    // Fall back to old single-key format
+    only_guid(v)
+}
+
 pub(crate) fn only_str(v: &Value) -> Result<&str, Error> {
     let s = first(v)
         .ok_or(Error::InvalidParams)?
