@@ -104,7 +104,7 @@ async fn test_page_viewport() {
 async fn test_frame_main_frame() {
     // Test l'accès au frame principal
     let driver = Driver::new(Driver::default_dest());
-    let mut playwright = Playwright::with_driver(driver).await.unwrap();
+    let playwright = Playwright::with_driver(driver).await.unwrap();
 
     playwright.install_chromium().unwrap();
     let chromium = playwright.chromium();

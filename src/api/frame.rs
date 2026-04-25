@@ -6,11 +6,11 @@ use crate::{
         frame::{
             AddScriptTagArgs, CheckArgs, ClickArgs, Evt, FillArgs, Frame as Impl, GotoArgs,
             HoverArgs, Opt, PressArgs, SelectOptionArgs, SetContentArgs, SetInputFilesArgs,
-            TapArgs, TypeArgs, WaitForFunctionArgs, WaitForSelectorArgs
+            TapArgs, TypeArgs, WaitForFunctionArgs, WaitForSelectorArgs,
         },
         prelude::*,
-        utils::{DocumentLoadState, File, KeyboardModifier, MouseButton, Position}
-    }
+        utils::{DocumentLoadState, File, KeyboardModifier, MouseButton, Position},
+    },
 };
 
 /// At every point of time, page exposes its current frame tree via the [`method: Page.mainFrame`] and
@@ -45,7 +45,7 @@ use crate::{
 /// ```
 #[derive(Clone)]
 pub struct Frame {
-    inner: Weak<Impl>
+    inner: Weak<Impl>,
 }
 
 impl PartialEq for Frame {
@@ -67,16 +67,22 @@ macro_rules! is_checked {
 }
 
 impl Frame {
-    pub(crate) fn new(inner: Weak<Impl>) -> Self { Self { inner } }
+    pub(crate) fn new(inner: Weak<Impl>) -> Self {
+        Self { inner }
+    }
 
-    pub fn url(&self) -> Result<String, Error> { Ok(upgrade(&self.inner)?.url()) }
+    pub fn url(&self) -> Result<String, Error> {
+        Ok(upgrade(&self.inner)?.url())
+    }
 
     /// Returns frame's name attribute as specified in the tag.
     ///
     /// If the name is empty, returns the id attribute instead.
     ///
     /// > NOTE: This value is calculated once when the frame is created, and will not update if the attribute is changed later.
-    pub fn name(&self) -> Result<String, Error> { Ok(upgrade(&self.inner)?.name()) }
+    pub fn name(&self) -> Result<String, Error> {
+        Ok(upgrade(&self.inner)?.name())
+    }
 
     pub fn page(&self) -> Result<Option<Page>, Error> {
         Ok(upgrade(&self.inner)?.page().map(Page::new))
@@ -187,7 +193,7 @@ impl Frame {
     pub async fn text_content(
         &self,
         selector: &str,
-        timeout: Option<f64>
+        timeout: Option<f64>,
     ) -> ArcResult<Option<String>> {
         upgrade(&self.inner)?.text_content(selector, timeout).await
     }
@@ -207,7 +213,7 @@ impl Frame {
         &self,
         selector: &str,
         name: &str,
-        timeout: Option<f64>
+        timeout: Option<f64>,
     ) -> ArcResult<Option<String>> {
         upgrade(&self.inner)?
             .get_attribute(selector, name, timeout)
@@ -240,7 +246,7 @@ impl Frame {
     /// ```
     pub async fn frame_element(&self) -> ArcResult<ElementHandle> {
         Ok(ElementHandle::new(
-            upgrade(&self.inner)?.frame_element().await?
+            upgrade(&self.inner)?.frame_element().await?,
         ))
     }
 
@@ -271,7 +277,9 @@ impl Frame {
         WaitForSelectorBuilder::new(self.inner.clone(), selector)
     }
 
-    pub async fn title(&self) -> ArcResult<String> { upgrade(&self.inner)?.title().await }
+    pub async fn title(&self) -> ArcResult<String> {
+        upgrade(&self.inner)?.title().await
+    }
 
     /// Sends a `keydown`, `keypress`/`input`, and `keyup` event for each character in the text. `frame.type` can be used to
     /// send fine-grained keyboard events. To fill values in form fields, use [`method: Frame.fill`].
@@ -328,7 +336,9 @@ impl Frame {
     is_checked! {is_visible}
 
     /// Gets the full HTML contents of the frame, including the doctype.
-    pub async fn content<'a>(&self) -> ArcResult<String> { upgrade(&self.inner)?.content().await }
+    pub async fn content<'a>(&self) -> ArcResult<String> {
+        upgrade(&self.inner)?.content().await
+    }
 
     pub fn set_content_builder<'a>(&self, html: &'a str) -> SetContentBuilder<'a> {
         SetContentBuilder::new(self.inner.clone(), html)
@@ -380,7 +390,7 @@ impl Frame {
     pub async fn add_style_tag(
         &self,
         content: &str,
-        url: Option<&str>
+        url: Option<&str>,
     ) -> ArcResult<ElementHandle> {
         upgrade(&self.inner)?
             .add_style_tag(content, url)
@@ -398,10 +408,10 @@ impl Frame {
     pub async fn evaluate_element_handle<T>(
         &self,
         expression: &str,
-        args: Option<T>
+        args: Option<T>,
     ) -> ArcResult<ElementHandle>
     where
-        T: Serialize
+        T: Serialize,
     {
         upgrade(&self.inner)?
             .evaluate_element_handle(expression, args)
@@ -437,10 +447,10 @@ impl Frame {
     pub async fn evaluate_js_handle<T>(
         &self,
         expression: &str,
-        arg: Option<T>
+        arg: Option<T>,
     ) -> ArcResult<JsHandle>
     where
-        T: Serialize
+        T: Serialize,
     {
         upgrade(&self.inner)?
             .evaluate_js_handle(expression, arg)
@@ -450,7 +460,7 @@ impl Frame {
 
     pub async fn eval<U>(&self, expression: &str) -> ArcResult<U>
     where
-        U: DeserializeOwned
+        U: DeserializeOwned,
     {
         upgrade(&self.inner)?.eval(expression).await
     }
@@ -481,7 +491,7 @@ impl Frame {
     pub async fn evaluate<T, U>(&self, expression: &str, arg: T) -> ArcResult<U>
     where
         T: Serialize,
-        U: DeserializeOwned
+        U: DeserializeOwned,
     {
         upgrade(&self.inner)?.evaluate(expression, Some(arg)).await
     }
@@ -506,11 +516,11 @@ impl Frame {
         &self,
         selector: &str,
         expression: &str,
-        arg: Option<T>
+        arg: Option<T>,
     ) -> ArcResult<U>
     where
         T: Serialize,
-        U: DeserializeOwned
+        U: DeserializeOwned,
     {
         upgrade(&self.inner)?
             .evaluate_on_selector(selector, expression, arg)
@@ -534,11 +544,11 @@ impl Frame {
         &self,
         selector: &str,
         expression: &str,
-        arg: Option<T>
+        arg: Option<T>,
     ) -> ArcResult<U>
     where
         T: Serialize,
-        U: DeserializeOwned
+        U: DeserializeOwned,
     {
         upgrade(&self.inner)?
             .evaluate_on_selector_all(selector, expression, arg)
@@ -576,10 +586,10 @@ impl Frame {
         &self,
         selector: &str,
         r#type: &str,
-        event_init: Option<T>
+        event_init: Option<T>,
     ) -> ArcResult<()>
     where
-        T: Serialize
+        T: Serialize,
     {
         // timeout not supported
         upgrade(&self.inner)?
@@ -618,7 +628,7 @@ impl Frame {
     pub fn set_input_files_builder<'a>(
         &self,
         selector: &'a str,
-        file: File
+        file: File,
     ) -> SetInputFilesBuilder<'a> {
         SetInputFilesBuilder::new(self.inner.clone(), selector, file)
     }
@@ -651,21 +661,21 @@ impl Frame {
 #[derive(Debug)]
 pub enum Event {
     LoadState(DocumentLoadState),
-    Navigated(FrameNavigatedEvent)
+    Navigated(FrameNavigatedEvent),
 }
 
 impl From<Evt> for Event {
     fn from(e: Evt) -> Self {
         match e {
             Evt::LoadState(x) => Self::LoadState(x),
-            Evt::Navigated(x) => Self::Navigated(x)
+            Evt::Navigated(x) => Self::Navigated(x),
         }
     }
 }
 
 pub struct GotoBuilder<'a, 'b> {
     inner: Weak<Impl>,
-    args: GotoArgs<'a, 'b>
+    args: GotoArgs<'a, 'b>,
 }
 
 impl<'a, 'b> GotoBuilder<'a, 'b> {
@@ -693,7 +703,7 @@ macro_rules! clicker {
     ($t: ident, $f: ident) => {
         pub struct $t<'a> {
             inner: Weak<Impl>,
-            args: ClickArgs<'a>
+            args: ClickArgs<'a>,
         }
 
         impl<'a> $t<'a> {
@@ -741,7 +751,7 @@ clicker!(DblClickBuilder, dblclick);
 
 pub struct WaitForSelectorBuilder<'a> {
     inner: Weak<Impl>,
-    args: WaitForSelectorArgs<'a>
+    args: WaitForSelectorArgs<'a>,
 }
 
 impl<'a> WaitForSelectorBuilder<'a> {
@@ -767,7 +777,7 @@ macro_rules! type_builder {
     ($t: ident, $a: ident, $f: ident, $m: ident) => {
         pub struct $t<'a, 'b> {
             inner: Weak<Impl>,
-            args: $a<'a, 'b>
+            args: $a<'a, 'b>,
         }
 
         impl<'a, 'b> $t<'a, 'b> {
@@ -800,7 +810,7 @@ type_builder!(PressBuilder, PressArgs, key, press);
 
 pub struct HoverBuilder<'a> {
     inner: Weak<Impl>,
-    args: HoverArgs<'a>
+    args: HoverArgs<'a>,
 }
 
 impl<'a> HoverBuilder<'a> {
@@ -832,7 +842,7 @@ impl<'a> HoverBuilder<'a> {
 
 pub struct SetContentBuilder<'a> {
     inner: Weak<Impl>,
-    args: SetContentArgs<'a>
+    args: SetContentArgs<'a>,
 }
 
 impl<'a> SetContentBuilder<'a> {
@@ -854,7 +864,7 @@ impl<'a> SetContentBuilder<'a> {
 
 pub struct TapBuilder<'a> {
     inner: Weak<Impl>,
-    args: TapArgs<'a>
+    args: TapArgs<'a>,
 }
 
 impl<'a> TapBuilder<'a> {
@@ -891,7 +901,7 @@ impl<'a> TapBuilder<'a> {
 
 pub struct FillBuilder<'a, 'b> {
     inner: Weak<Impl>,
-    args: FillArgs<'a, 'b>
+    args: FillArgs<'a, 'b>,
 }
 
 impl<'a, 'b> FillBuilder<'a, 'b> {
@@ -919,7 +929,7 @@ macro_rules! check_builder {
     ($t: ident, $m: ident) => {
         pub struct $t<'a> {
             inner: Weak<Impl>,
-            args: CheckArgs<'a>
+            args: CheckArgs<'a>,
         }
 
         impl<'a> $t<'a> {
@@ -957,7 +967,7 @@ check_builder!(UncheckBuilder, uncheck);
 
 pub struct AddScriptTagBuilder<'a, 'b, 'c> {
     inner: Weak<Impl>,
-    args: AddScriptTagArgs<'a, 'b, 'c>
+    args: AddScriptTagArgs<'a, 'b, 'c>,
 }
 
 impl<'a, 'b, 'c> AddScriptTagBuilder<'a, 'b, 'c> {
@@ -995,7 +1005,7 @@ impl<'a, 'b, 'c> AddScriptTagBuilder<'a, 'b, 'c> {
 pub struct SelectOptionBuilder<'a> {
     inner: Weak<Impl>,
     args: SelectOptionArgs<'a>,
-    err: Option<Error>
+    err: Option<Error>,
 }
 
 impl<'a> SelectOptionBuilder<'a> {
@@ -1004,7 +1014,7 @@ impl<'a> SelectOptionBuilder<'a> {
         Self {
             inner,
             args,
-            err: None
+            err: None,
         }
     }
 
@@ -1086,7 +1096,7 @@ impl<'a> SelectOptionBuilder<'a> {
 
 pub struct SetInputFilesBuilder<'a> {
     inner: Weak<Impl>,
-    args: SetInputFilesArgs<'a>
+    args: SetInputFilesArgs<'a>,
 }
 
 impl<'a> SetInputFilesBuilder<'a> {
@@ -1123,7 +1133,7 @@ impl<'a> SetInputFilesBuilder<'a> {
 pub struct WaitForFunctionBuilder<'a> {
     inner: Weak<Impl>,
     args: WaitForFunctionArgs<'a>,
-    err: Option<Error>
+    err: Option<Error>,
 }
 
 impl<'a> WaitForFunctionBuilder<'a> {
@@ -1132,7 +1142,7 @@ impl<'a> WaitForFunctionBuilder<'a> {
         Self {
             inner,
             args,
-            err: None
+            err: None,
         }
     }
 
@@ -1149,14 +1159,14 @@ impl<'a> WaitForFunctionBuilder<'a> {
 
     pub fn arg<T>(mut self, x: &T) -> Self
     where
-        T: Serialize
+        T: Serialize,
     {
         let arg = match ser::to_value(x).map_err(Error::SerializationPwJson) {
             Err(e) => {
                 self.err = Some(e);
                 return self;
             }
-            Ok(arg) => arg
+            Ok(arg) => arg,
         };
         self.args.arg = Some(arg);
         self

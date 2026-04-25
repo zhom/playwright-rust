@@ -96,6 +96,7 @@
 //!
 //! - [GitHub Repository](https://github.com/sctg-development/playwright-rust)
 //! - [Official Playwright Documentation](https://playwright.dev)
+#![allow(dead_code)]
 
 #[macro_use]
 extern crate serde;

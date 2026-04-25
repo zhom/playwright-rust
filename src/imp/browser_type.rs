@@ -83,7 +83,7 @@ impl BrowserType {
         Ok(browser)
     }
 
-    pub(crate) async fn connect(&self, args: ConnectArgs<'_>) -> ArcResult<Weak<Browser>> {
+    pub(crate) async fn connect(&self, _args: ConnectArgs<'_>) -> ArcResult<Weak<Browser>> {
         todo!()
     }
 }

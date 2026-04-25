@@ -1,3 +1,5 @@
+#![allow(dead_code, unused_imports)]
+
 mod browser;
 mod browser_context;
 mod browser_type;

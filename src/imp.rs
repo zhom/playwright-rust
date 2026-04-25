@@ -3,17 +3,14 @@ pub(crate) mod impl_future {
 }
 pub(crate) mod prelude {
     pub use serde::{de::DeserializeOwned, Deserialize, Serialize};
-    pub use serde_json::{
-        map::Map,
-        value::Value
-    };
+    pub use serde_json::{map::Map, value::Value};
     pub use std::{
         collections::HashMap,
         convert::TryInto,
         path::{Path, PathBuf},
         sync::{Arc, Mutex, Weak},
         task::{Poll, Waker},
-        time::Duration
+        time::Duration,
     };
     pub use strong::*;
     pub type Wm<T> = Weak<Mutex<T>>;
@@ -38,14 +35,19 @@ pub(crate) mod prelude {
     impl<T> RemoveOne<T> for Vec<T> {
         fn remove_one<F>(&mut self, f: F)
         where
-            F: Fn(&T) -> bool
+            F: Fn(&T) -> bool,
         {
             let index = match self.iter().position(f) {
                 Some(i) => i,
-                None => return
+                None => return,
             };
             self.remove(index);
         }
+    }
+
+    pub(crate) fn b64_decode(s: impl AsRef<[u8]>) -> Result<Vec<u8>, base64::DecodeError> {
+        use base64::Engine;
+        base64::engine::general_purpose::STANDARD.decode(s)
     }
 }
 
@@ -57,7 +59,7 @@ mod macros {
         ($c:expr, $guid:expr, $t:ident) => {
             match $c.find_object($guid) {
                 Some(RemoteWeak::$t(x)) => Ok(x),
-                _ => Err(Error::ObjectNotFound)
+                _ => Err(Error::ObjectNotFound),
             }
         };
     }
@@ -100,6 +102,7 @@ pub(crate) mod artifact;
 pub(crate) mod binding_call;
 pub(crate) mod browser;
 pub(crate) mod browser_context;
+pub(crate) mod cdp_session;
 pub(crate) mod console_message;
 pub(crate) mod dialog;
 pub(crate) mod download;

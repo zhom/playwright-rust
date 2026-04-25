@@ -1,16 +1,18 @@
 use crate::imp::{core::*, prelude::*};
 use std::{
     fs::File,
-    io::{BufWriter, Write}
+    io::{BufWriter, Write},
 };
 
 #[derive(Debug)]
 pub(crate) struct Stream {
-    channel: ChannelOwner
+    channel: ChannelOwner,
 }
 
 impl Stream {
-    pub(crate) fn new(channel: ChannelOwner) -> Self { Self { channel } }
+    pub(crate) fn new(channel: ChannelOwner) -> Self {
+        Self { channel }
+    }
 
     pub(crate) async fn save_as<P: AsRef<Path>>(&self, path: P) -> ArcResult<()> {
         let file = File::create(path).map_err(Error::from)?;
@@ -21,7 +23,7 @@ impl Stream {
             if b64.is_empty() {
                 break;
             } else {
-                let bytes = base64::decode(b64).map_err(Error::InvalidBase64)?;
+                let bytes = b64_decode(b64).map_err(Error::InvalidBase64)?;
                 writer.write(&bytes).map_err(Error::from)?;
             }
         }
@@ -37,6 +39,10 @@ impl Stream {
 }
 
 impl RemoteObject for Stream {
-    fn channel(&self) -> &ChannelOwner { &self.channel }
-    fn channel_mut(&mut self) -> &mut ChannelOwner { &mut self.channel }
+    fn channel(&self) -> &ChannelOwner {
+        &self.channel
+    }
+    fn channel_mut(&mut self) -> &mut ChannelOwner {
+        &mut self.channel
+    }
 }

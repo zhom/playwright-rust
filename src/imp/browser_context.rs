@@ -1,5 +1,6 @@
 use crate::imp::{
     browser::Browser,
+    cdp_session::CdpSession,
     core::*,
     page::Page,
     prelude::*,
@@ -46,6 +47,30 @@ impl BrowserContext {
         let guid = only_guid(&res)?;
         let p = get_object!(self.context()?.lock().unwrap(), guid, Page)?;
         Ok(p)
+    }
+
+    pub(crate) async fn new_cdp_session(
+        &self,
+        page: Weak<Page>,
+    ) -> Result<Weak<CdpSession>, Arc<Error>> {
+        let page = page
+            .upgrade()
+            .ok_or_else(|| Arc::new(Error::ObjectNotFound))?;
+        #[derive(Serialize)]
+        struct PageRef<'a> {
+            guid: &'a S<Guid>,
+        }
+        #[derive(Serialize)]
+        struct Args<'a> {
+            page: PageRef<'a>,
+        }
+        let args = Args {
+            page: PageRef { guid: page.guid() },
+        };
+        let res = send_message!(self, "newCDPSession", args);
+        let guid = only_guid(&res)?;
+        let s = get_object!(self.context()?.lock().unwrap(), guid, CdpSession)?;
+        Ok(s)
     }
 
     pub(crate) async fn close(&self) -> Result<(), Arc<Error>> {

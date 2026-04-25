@@ -3,3 +3,4 @@ Cargo.lock
 driver
 tarpaulin-report.html
 cobertura.xml
+.DS_Store

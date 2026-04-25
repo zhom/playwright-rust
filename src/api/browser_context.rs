@@ -1,13 +1,13 @@
 pub use crate::imp::browser_context::EventType;
 use crate::{
-    api::{Browser, Page},
+    api::{Browser, CdpSession, Page},
     imp::{
         browser_context::{BrowserContext as Impl, Evt},
         core::*,
         prelude::*,
-        utils::{Cookie, Geolocation, StorageState}
+        utils::{Cookie, Geolocation, StorageState},
     },
-    Error
+    Error,
 };
 
 /// BrowserContexts provide a way to operate multiple independent browser sessions.
@@ -19,7 +19,7 @@ use crate::{
 /// contexts don't write any browsing data to disk.
 #[derive(Debug)]
 pub struct BrowserContext {
-    inner: Weak<Impl>
+    inner: Weak<Impl>,
 }
 
 impl PartialEq for BrowserContext {
@@ -33,7 +33,9 @@ impl PartialEq for BrowserContext {
 }
 
 impl BrowserContext {
-    pub(crate) fn new(inner: Weak<Impl>) -> Self { Self { inner } }
+    pub(crate) fn new(inner: Weak<Impl>) -> Self {
+        Self { inner }
+    }
 
     /// Returns all open pages in the context.
     pub fn pages(&self) -> Result<Vec<Page>, Error> {
@@ -54,6 +56,14 @@ impl BrowserContext {
     pub async fn new_page(&self) -> Result<Page, Arc<Error>> {
         let inner = upgrade(&self.inner)?;
         Ok(Page::new(inner.new_page().await?))
+    }
+
+    /// Returns a new raw CDP session attached to the given page. CDP is only
+    /// supported on Chromium-based browsers.
+    pub async fn new_cdp_session(&self, page: &Page) -> Result<CdpSession, Arc<Error>> {
+        let inner = upgrade(&self.inner)?;
+        let page_inner = page.inner_weak();
+        Ok(CdpSession::new(inner.new_cdp_session(page_inner).await?))
     }
 
     pub async fn set_default_navigation_timeout(&self, timeout: u32) -> ArcResult<()> {
@@ -114,7 +124,7 @@ impl BrowserContext {
     pub async fn grant_permissions(
         &self,
         permissions: &[String],
-        origin: Option<&str>
+        origin: Option<&str>,
     ) -> ArcResult<()> {
         upgrade(&self.inner)?
             .grant_permissions(permissions, origin)
@@ -176,7 +186,7 @@ impl BrowserContext {
     /// > NOTE: [`method: BrowserContext.setExtraHTTPHeaders`] does not guarantee the order of headers in the outgoing requests.
     pub async fn set_extra_http_headers<T>(&self, headers: T) -> ArcResult<()>
     where
-        T: IntoIterator<Item = (String, String)>
+        T: IntoIterator<Item = (String, String)>,
     {
         upgrade(&self.inner)?.set_extra_http_headers(headers).await
     }
@@ -207,7 +217,7 @@ impl BrowserContext {
     pub async fn close(&self) -> ArcResult<()> {
         let inner = match self.inner.upgrade() {
             None => return Ok(()),
-            Some(inner) => inner
+            Some(inner) => inner,
         };
         inner.close().await
     }
@@ -242,14 +252,14 @@ pub enum Event {
     /// ]);
     /// console.log(await newPage.evaluate('location.href'));
     /// ```
-    Page(Page)
+    Page(Page),
 }
 
 impl From<Evt> for Event {
     fn from(e: Evt) -> Event {
         match e {
             Evt::Close => Event::Close,
-            Evt::Page(w) => Event::Page(Page::new(w))
+            Evt::Page(w) => Event::Page(Page::new(w)),
         }
     }
 }

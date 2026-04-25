@@ -169,20 +169,18 @@ pub(crate) fn only_guid(v: &Value) -> Result<&S<Guid>, Error> {
 /// single-key format (`{"context": {"guid": ...}}`). The `key` parameter
 /// specifies which nested object to read ("browser" or "context").
 pub(crate) fn extract_guid<'a>(v: &'a Value, key: &str) -> Result<&'a S<Guid>, Error> {
-    // Try the named key first (new format)
-    if let Some(obj) = v.as_object().and_then(|m| m.get(key)) {
-        if let Some(m) = obj.as_object() {
-            if let Some(guid_val) = m.get("guid") {
-                if let Some(s) = guid_val.as_str() {
-                    if let Ok(validated) = S::<Guid>::validate(s) {
-                        return Ok(validated);
-                    }
-                }
-            }
-        }
+    if let Some(guid) = as_named_guid(v, key) {
+        return Ok(guid);
     }
     // Fall back to old single-key format
     only_guid(v)
+}
+
+fn as_named_guid<'a>(v: &'a Value, key: &str) -> Option<&'a S<Guid>> {
+    let obj = v.as_object()?.get(key)?;
+    let m = obj.as_object()?;
+    let s = m.get("guid")?.as_str()?;
+    S::validate(s).ok()
 }
 
 pub(crate) fn only_str(v: &Value) -> Result<&str, Error> {
